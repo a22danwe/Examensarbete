@@ -53,6 +53,11 @@
             .sidebar.right{
                 right: 0;
             }
+            #app{
+                background-color: white;
+                display: flex;
+                justify-content: center;
+            }
 
         </style>
     </head>
@@ -76,5 +81,21 @@
         <div class="sidebar right">
             <p>jehjeh</p>
         </div>
+
+        <div id="app">{{ message }}</div> 
+
+<script>
+  const { createApp, ref } = Vue
+
+  createApp({
+    setup() {
+      const message = ref('Hello vue!')
+      return {
+        message
+      }
+    }
+  }).mount('#app')
+</script>
+
     </body>
 </html>
