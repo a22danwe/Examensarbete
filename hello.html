@@ -4,7 +4,36 @@
         <title>Nyhetssida</title>
 
         <style>
-            header { background: black; color: white;}
+            body{
+                font-family: sans-serif;
+                margin: 0;
+                background: #f4f4f4;
+            }
+            header{ 
+                background: black; 
+                color: white; 
+                text-align: center; padding: 1rem;
+            }
+
+            .container{
+                width: 30%;
+                height: 60%;
+                margin: 40px auto;
+            }
+
+            .card{
+                background: white; 
+                border-radius: 5px; 
+                box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                padding: 1rem;
+                margin-bottom: 1rem;
+                cursor: pointer;
+                transition: 0.2s;
+            }
+            .card:hover{
+                transform: scale(1.2);
+            }
+
         </style>
     </head>
 
