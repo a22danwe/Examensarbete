@@ -86,13 +86,34 @@
     </div>
 
 <script>
-  const {createApp, ref} = Vue;
+  const {createApp, ref, onMounted} = Vue;
 
   createApp({
     setup() {
         const message = ref('Hello Vue!')
         const article = ref('Give me some text to use please!')
         const description = ref ('description from dataset')
+
+        const fetchJson = async () => {
+            try {
+                const res = await fetch("dataset.json");
+                const json = await res.json();
+                const firstRow = json.data[0];
+
+                const year = firstRow[18];
+                const group = firstRow[13];
+                const estimate = firstRow[17];
+
+                message.value = `${year} - ${group}`;
+                article.value = `${estimate} dödsfall per 100 000`;
+                description.value = `Under ${year} rapporterades ${estimate} dödsfall bland ${group.toLowerCase()}.`;
+            } catch (err) {
+                message.value = "Kunde inte ladda data";
+                console.error("Fel vid hämtning:", err);
+            }           
+        };
+        onMounted(fetchJson);
+
       return {
         message,
         article,
