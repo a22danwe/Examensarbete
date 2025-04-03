@@ -71,8 +71,8 @@
 
         <div class="container">
             <div class="card" v-for="item in articles" :key="item.id">
-                <h3>{{ item.year }} - {{ item.group }}</h3>
-                <p>{{ item.estimate }} deaths per 100 000</p>
+                <h3>Drug overdose deaths {{ item.year }} - {{ item.group }} old</h3>
+                <p>{{ item.estimate }} - {{ item.estimate }} deaths per 100 000</p>
                 <small>{{ item.description }}</small>
             </div>
         </div>
@@ -107,10 +107,10 @@
                     const panel = row[9]?.toLowerCase().trim();
                     const gender = row[16]?.toLowerCase().trim();
                     const estimate = parseFloat(row[19]);
-
+                    
+                    console.log("test.", {panel, gender, estimate});
                     return (
-                        panel === "all drug overdose deaths" &&
-                        (gender === "male" || gender === "female") &&
+                        panel.includes("all drug overdose deaths") &&
                         !isNaN(estimate)
                     );
                 })
@@ -118,10 +118,12 @@
 
                     .map ((row, index) => ({
                         id: index,
-                        year: row[17],
-                        group: row[16],
+                        year: row[17], // år
+                        group: row[15], // åldersgrupp
+                        gender: row[16],
+                        panel: row[9],
                         estimate: row[19],
-                        description: `Under ${row[17]} was ${row[19]} deaths reported among ${row[16].toLowerCase()}.`
+                        description: `Under ${row[17]} was ${row[20]} deaths per 100 000 reported among ${row[15]?.toLowerCase()} olds.`
                     }));
                 
                 console.log("Antal artiklar:", filtered.length);
@@ -130,13 +132,7 @@
 
             } catch (err) {
                 console.error("Fel vid hämtning:", err);
-                articles.value = [{
-                    id: 1,
-                    year: "2020",
-                    group: "Male",
-                    estimate: "28.3",
-                    description: "Testartikel visas då data inte laddas."
-                }];
+                
             }           
         };
         
