@@ -71,10 +71,11 @@
 
         <div class="container">
             <div class="card" v-for="item in articles" :key="item.id">
-                <h3>Drug overdose deaths {{ item.year }} - {{ item.group }} old</h3>
-                <p>{{ item.estimate }} - {{ item.estimate }} deaths per 100 000</p>
-                <small>{{ item.description }}</small>
-            </div>
+                <h3>{{ item.year }} – {{ item.ageGroup }} – {{ item.gender }}</h3>
+                <p><strong>Drug type:</strong> {{ item.panel }}</p>
+                <p><strong>Deaths:</strong> {{ item.estimate }} per 100 000 citizen</p>
+                <p>{{ item.description }}</p>
+              </div>
         </div>
         <div class="sidebar left">
             <p>hejhej</p>
@@ -102,32 +103,32 @@
                     console.log(`rad ${i}`, row[9], row[16], row[19]);
                 });
 
-                const filtered = data
-                .filter(row => {
-                    const panel = row[9]?.toLowerCase().trim();
-                    const gender = row[16]?.toLowerCase().trim();
-                    const estimate = parseFloat(row[19]);
+                const allData = data
+                // .filter(row => {
+                //     const panel = row[9]?.toLowerCase().trim();
+                //     const gender = row[16]?.toLowerCase().trim();
+                //     const estimate = parseFloat(row[19]);
                     
-                    console.log("test.", {panel, gender, estimate});
-                    return (
-                        panel.includes("all drug overdose deaths") &&
-                        !isNaN(estimate)
-                    );
-                })
+                //     console.log("test.", {panel, gender, estimate});
+                //     return (
+                //         panel.includes("all drug overdose deaths") &&
+                //         !isNaN(estimate)
+                //     );
+                // })
                
 
                     .map ((row, index) => ({
                         id: index,
                         year: row[17], // år
-                        group: row[15], // åldersgrupp
-                        gender: row[16],
-                        panel: row[9],
-                        estimate: row[19],
+                        ageGroup: row[15], // åldersgrupp
+                        gender: row[16], // kön
+                        panel: row[9], // drogtyp
+                        estimate: row[19], // 
                         description: `Under ${row[17]} was ${row[20]} deaths per 100 000 reported among ${row[15]?.toLowerCase()} olds.`
                     }));
                 
-                console.log("Antal artiklar:", filtered.length);
-                articles.value = filtered;
+                console.log("Antal artiklar:", allData.length);
+                articles.value = allData;
 
 
             } catch (err) {
