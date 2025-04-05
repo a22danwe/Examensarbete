@@ -128,8 +128,6 @@
             :key="item.id" @click="selectedArticle = item">
                 <h3>{{ item.year }} – {{ item.ageGroup }} – {{ item.gender }}</h3>
                 <p><strong>Drug type:</strong> {{ item.panel }}</p>
-                <!-- <p><strong>Deaths:</strong> {{ item.estimate }} per 100 000 citizen</p>
-                <p>{{ item.description }}</p> -->
               </div>
         </div>
 
@@ -164,6 +162,17 @@
         const selectedPanel = ref('Alla')
         const selectedArticle = ref(null);
         const articles = ref([]);
+        const raceMap = {
+            '1': 'White',
+            '2': 'Black or African American',
+            '3': 'American Indian or Alaska Native',
+            '4': 'Asian',
+            '5': 'Native Hawaiian or Other Pacific Islander',
+            '6': 'Hispanic or Latino',
+            '7': 'More than one race',
+            '8': 'Other',
+            '9': 'Unknown'
+        };
 
         const panels = computed(() => {
         const all = articles.value.map(a => a.panel);
@@ -191,10 +200,10 @@
                         ageGroup: row[15], // åldersgrupp
                         gender: row[16], // kön
                         state: row[8], //stat
-                        race: row[14], //etnisitet
+                        race: raceMap[row[14]] || 'Unknown', // etnisitet
                         panel: row[9], // drogtyp
                         estimate: row[21], // ungefära dödsantalet
-                        description: `Under ${row[17]} was ${row[21]} deaths per 100 000 reported among ${row[15]?.toLowerCase()} olds.`
+                        description: `Under ${row[17]} was ${row[21]} deaths per 100 000 reported among ${row[15]?.toLowerCase()}.`
                     }));
                 
                 console.log("Antal artiklar:", allData.length);
