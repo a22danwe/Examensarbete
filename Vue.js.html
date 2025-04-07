@@ -154,9 +154,9 @@
               </div>
 
               <div class="pagination">
-                <button @click="currentPage--" :disabled="currentPage === 1">Previous</button>
+                <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
                 <span>Page {{ currentPage }} of {{ totalPages }}</span>
-                <button @click="currentPage++" :disabled="currentPage === totalPages">Next</button>
+                <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
             </div>
         </div>
 
@@ -190,7 +190,7 @@
   createApp({
     setup() {
 
-        const start =performance.now();
+        const start = performance.now();
         onMounted(async () => {
             await fetchJson();
             nextTick(() => {
@@ -198,8 +198,6 @@
                 console.log(`Vue: Render time: ${(end - start).toFixed(2)}`)
             });
         });
-
-
 
         const selectedPanel = ref('Alla')
         const selectedArticle = ref(null);
@@ -254,7 +252,21 @@
             } catch (err) {
                 console.error("Fel vid hämtning:", err);
                 
-            }           
+            }
+            
+            const nextPage = () => {
+                if (currentPage.value < totalPages.value) {
+                    currentPage.value++;
+                    measureRender('Next Page');
+                }
+            };
+
+            const prevPage = () => {
+                if (currentPage.value > 1) {
+                    currentPage.value--;
+                    measureRender('Previous Page');
+                }
+            };
         };
         
         onMounted(fetchJson);
@@ -267,8 +279,23 @@
         filteredArticles,
         paginatedArticles,
         currentPage,
-        totalPages
+        totalPages,
+        nextPage,
+        prevPage,
+        onPanelChange
       };
+
+      const renderStart = ref(0);
+      async function measureRender() {
+            renderStart.value = performance.now();
+            await nextTick();
+            const renderEnd = performance.now();
+            console.log (`${label}: ${(renderEnd - renderStart.value). toFixed(2)} ms`)
+        }
+
+        const onPanelChange = () => {
+            measureRender('Filter Applied');
+        };
       
     }
   }).mount('#app')
