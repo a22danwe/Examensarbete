@@ -209,11 +209,29 @@
                 const start = performance.now();
                 onMounted(async () => {
                     await fetchJson();
-                    nextTick(() => {
-                        const end = performance.now();
-                        console.log(`Vue: Render time: ${(end - start).toFixed(2)}`)
-                    });
+                    await fetchJson();
+                    await nextTick();
+                    const end = performance.now();
+                    const time = end - performance.timing.navigationStart;
+
+                    const label = `Reload ${getReloadCount()}`;
+                    console.log(`${label}: ${time.toFixed(2)} ms`);
+                    saveRenderTime(label, time);
+
+                    if (getReloadCount() < 50) {
+                        incrementReloadCount();
+                        setTimeout(() => location.reload(), 500); // ladda om efter 0.5 sek
+                    } else {
+                        exportCSV(); // efter 50 reloads – exportera CSV
+                        clearReloadCount();
+                    }
                 });
+
+                function saveRenderTime(label, time) {
+                    const existing = JSON.parse(localStorage.getItem("renderTimes") || "[]");
+                    existing.push({ label, time });
+                    localStorage.setItem("renderTimes", JSON.stringify(existing));
+                }
 
                 const selectedPanel = ref('Alla')
                 const selectedArticle = ref(null);
@@ -221,6 +239,17 @@
                 const currentPage = ref(1);
                 const articlesPerPage = 10;
                 const renderTimes = ref([]);
+
+                function getReloadCount() {
+                    return Number(localStorage.getItem("reloadCount") || "0");
+                }
+                function incrementReloadCount() {
+                    const count = getReloadCount() + 1;
+                    localStorage.setItem("reloadCount", count);
+                }
+                function clearReloadCount() {
+                    localStorage.removeItem("reloadCount");
+                }
 
                 const paginatedArticles = computed(() => {
                     const start = (currentPage.value - 1) * articlesPerPage;
@@ -306,10 +335,11 @@
                 }
 
                 function exportCSV() {
-                    const header = 'Mätning, Label, Tid (ms)\n';
-                    const rows = renderTimes.value.map((entry, i) =>
-                        `${i + 1},${entry.label},${entry.time.toFixed(2)}`
-                    );
+                    const data = JSON.parse(localStorage.getItem("renderTimes") || "[]");
+                    const header = 'Mätning,Label,Tid (ms)\n';
+                    const rows = data.map((entry, i)=> 
+                        `${i + 1}, ${entry.label},${entry.time.toFixed(2)}`
+                    ); 
                     const csvContent = header + rows.join('\n');
 
                     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
