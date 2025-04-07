@@ -254,7 +254,9 @@
                 
             }
             
-            const nextPage = () => {
+        };
+
+        const nextPage = () => {
                 if (currentPage.value < totalPages.value) {
                     currentPage.value++;
                     measureRender('Next Page');
@@ -267,6 +269,18 @@
                     measureRender('Previous Page');
                 }
             };
+
+            const renderStart = ref(0);
+            async function measureRender(label = 'Render') {
+                renderStart.value = performance.now();
+                await nextTick();
+                const renderEnd = performance.now();
+                console.log(`${label}: ${(renderEnd - renderStart.value).toFixed(2)} ms`);
+            }
+
+
+        const onPanelChange = () => {
+            measureRender('Filter Applied');
         };
         
         onMounted(fetchJson);
@@ -284,18 +298,6 @@
         prevPage,
         onPanelChange
       };
-
-      const renderStart = ref(0);
-      async function measureRender() {
-            renderStart.value = performance.now();
-            await nextTick();
-            const renderEnd = performance.now();
-            console.log (`${label}: ${(renderEnd - renderStart.value). toFixed(2)} ms`)
-        }
-
-        const onPanelChange = () => {
-            measureRender('Filter Applied');
-        };
       
     }
   }).mount('#app')
