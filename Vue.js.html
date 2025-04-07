@@ -186,16 +186,15 @@
         </div>
 
         <div>
-            <button @click="autoTest()" style="display: block; margin: 1rem auto;">
-                Kör 50 mätningar
-            </button>
-        </div>
-        <div>
             <button @click="exportCSV" style="display: block; margin: 1rem auto;">
                 Exportera som CSV
             </button>
         </div>
-
+        <!-- <div>
+            <button @click="startPagingTest" style="display: block; margin: 1rem auto;">
+                Kör 50 sidbyten
+            </button>
+        </div> -->
     </div>
 
 
@@ -205,80 +204,49 @@
 
         createApp({
             setup() {
-
-                const start = performance.now();
-                onMounted(async () => {
-                    await fetchJson();
-                    await fetchJson();
-                    await nextTick();
-                    const end = performance.now();
-                    const time = end - performance.timing.navigationStart;
-
-                    const label = `Reload ${getReloadCount()}`;
-                    console.log(`${label}: ${time.toFixed(2)} ms`);
-                    saveRenderTime(label, time);
-
-                    if (getReloadCount() < 50) {
-                        incrementReloadCount();
-                        setTimeout(() => location.reload(), 500); // ladda om efter 0.5 sek
-                    } else {
-                        exportCSV(); // efter 50 reloads – exportera CSV
-                        clearReloadCount();
-                    }
-                });
-
-                function saveRenderTime(label, time) {
-                    const existing = JSON.parse(localStorage.getItem("renderTimes") || "[]");
-                    existing.push({ label, time });
-                    localStorage.setItem("renderTimes", JSON.stringify(existing));
-                }
-
                 const selectedPanel = ref('Alla')
                 const selectedArticle = ref(null);
                 const articles = ref([]);
                 const currentPage = ref(1);
                 const articlesPerPage = 10;
-                const renderTimes = ref([]);
+                const renderStart = ref(0);
 
-                function getReloadCount() {
-                    return Number(localStorage.getItem("reloadCount") || "0");
-                }
-                function incrementReloadCount() {
-                    const count = getReloadCount() + 1;
-                    localStorage.setItem("reloadCount", count);
-                }
-                function clearReloadCount() {
-                    localStorage.removeItem("reloadCount");
-                }
+                const getReloadCount = () => Number(localStorage.getItem("reloadCount") || "0");
+                const incrementReloadCount = () => localStorage.setItem("reloadCount", getReloadCount() + 1);
+                const clearReloadCount = () => localStorage.removeItem("reloadCount");
 
-                const paginatedArticles = computed(() => {
-                    const start = (currentPage.value - 1) * articlesPerPage;
-                    const end = start + articlesPerPage;
-                    return filteredArticles.value.slice(start, end);
-                });
+                const saveRenderTime = (label, time) => {
+                    const existing = JSON.parse(localStorage.getItem("renderTimes") || "[]");
+                    existing.push({ label, time });
+                    localStorage.setItem("renderTimes", JSON.stringify(existing));
+                };
 
-                const totalPages = computed(() => {
-                    return Math.ceil(filteredArticles.value.length / articlesPerPage);
-                });
+                const exportCSV = () => {
+                    const data = JSON.parse(localStorage.getItem("renderTimes") || "[]");
+                    const header = 'Mätning,Label,Tid (ms)\n';
+                    const rows = data.map((entry, i) =>
+                        `${i + 1},${entry.label},${entry.time.toFixed(2)}`
+                    );
+                    const csvContent = header + rows.join('\n');
 
-                const panels = computed(() => {
-                    const all = articles.value.map(a => a.panel);
-                    return ['Alla', ...new Set(all)];
-                });
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.setAttribute('download', 'renderingstider.csv');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
 
-                const filteredArticles = computed(() => {
-                    if (selectedPanel.value === 'Alla') return articles.value;
-                    return articles.value.filter(a => a.panel === selectedPanel.value);
-                });
+                    localStorage.removeItem("renderTimes");
+                    clearReloadCount();
+                };
+
 
                 const fetchJson = async () => {
                     try {
                         const res = await fetch("dataset.json");
                         const json = await res.json();
                         const data = json.data;
-
-
-
                         const allData = data
 
                             .map((row, index) => ({
@@ -302,30 +270,61 @@
 
                 };
 
-                const nextPage = () => {
+                const panels = computed(() => {
+                    const all = articles.value.map(a => a.panel);
+                    return ['Alla', ...new Set(all)];
+                });
+
+                const filteredArticles = computed(() => {
+                    if (selectedPanel.value === 'Alla') return articles.value;
+                    return articles.value.filter(a => a.panel === selectedPanel.value);
+                });
+
+                const paginatedArticles = computed(() => {
+                    const start = (currentPage.value - 1) * articlesPerPage;
+                    const end = start + articlesPerPage;
+                    return filteredArticles.value.slice(start, end);
+                });
+
+                const totalPages = computed(() => {
+                    return Math.ceil(filteredArticles.value.length / articlesPerPage);
+                });
+
+                const nextPage = async () => {
                     if (currentPage.value < totalPages.value) {
                         currentPage.value++;
-                        measureRender('Next Page');
+                        await measureRender(`Page change to ${currentPage.value}`);
+
                     }
                 };
 
-                const prevPage = () => {
+                const prevPage = async () => {
                     if (currentPage.value > 1) {
                         currentPage.value--;
-                        measureRender('Previous Page');
+                        await measureRender(`Page change to ${currentPage.value}`);
+
                     }
                 };
 
-                const renderStart = ref(0);
-                async function measureRender(label = 'Render') {
-                    renderStart.value = performance.now();
+                onMounted(async () => {
+                    const start = performance.now();
+                    await fetchJson();
                     await nextTick();
-                    const renderEnd = performance.now();
-                    const time = renderEnd - renderStart.value;
+                    const end = performance.now();
+                    const time = end - performance.timing.navigationStart;
 
-                    renderTimes.value.push({ label, time });
-                    console.log(`${label}: ${time.toFixed(2)} ms`)
-                }
+                    const label = `Reload ${getReloadCount()}`;
+                    console.log(`${label}: ${time.toFixed(2)} ms`);
+                    saveRenderTime(label, time);
+
+                    if (getReloadCount() < 50) {
+                        incrementReloadCount();
+                        setTimeout(() => location.reload(), 500); // ladda om efter 0.5 sek
+                    } else {
+                        exportCSV(); // efter 50 reloads – exportera CSV
+                        clearReloadCount();
+                    }
+                });
 
                 async function autoTest(pages = 50) {
                     for (let i = 0; i < pages; i++) {
@@ -334,27 +333,43 @@
                     }
                 }
 
-                function exportCSV() {
-                    const data = JSON.parse(localStorage.getItem("renderTimes") || "[]");
-                    const header = 'Mätning,Label,Tid (ms)\n';
-                    const rows = data.map((entry, i)=> 
-                        `${i + 1}, ${entry.label},${entry.time.toFixed(2)}`
-                    ); 
-                    const csvContent = header + rows.join('\n');
-
-                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.setAttribute('download', 'renderingstider.csv');
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
-
-
                 const onPanelChange = () => {
                     measureRender('Filter Applied');
                 };
+
+                async function measureRender(label = 'Render') {
+                    renderStart.value = performance.now();
+                    await nextTick(); // vänta tills DOM har uppdaterats
+                    const renderEnd = performance.now();
+                    const time = renderEnd - renderStart.value;
+
+                    const existing = JSON.parse(localStorage.getItem("renderTimes") || "[]");
+                    existing.push({ label, time });
+                    localStorage.setItem("renderTimes", JSON.stringify(existing));
+
+                    console.log(`${label}: ${time.toFixed(2)} ms`);
+                }
+
+                async function startPagingTest() {
+                    let direction = 1; // 1 = next, -1 = prev
+
+                    for (let i = 0; i < 50; i++) {
+                        if (direction === 1 && currentPage.value < totalPages.value) {
+                            currentPage.value++;
+                        } else if (direction === -1 && currentPage.value > 1) {
+                            currentPage.value--;
+                        }
+
+                        await measureRender(`Page change ${i + 1}`);
+
+                        // Ändra riktning vid slutet
+                        if (currentPage.value === totalPages.value) direction = -1;
+                        if (currentPage.value === 1) direction = 1;
+                    }
+
+                    exportCSV(); // Exportera efter 50 byten
+                }
+
 
                 onMounted(fetchJson);
 
