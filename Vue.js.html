@@ -185,10 +185,22 @@
     </div>
 
 <script>
-  const {createApp, ref, onMounted, computed} = Vue;
+  const {createApp, ref, onMounted, computed, nextTick} = Vue;
 
   createApp({
     setup() {
+
+        const start =performance.now();
+        onMounted(async () => {
+            await fetchJson();
+            nextTick(() => {
+                const end = performance.now();
+                console.log(`Vue: Render time: ${(end - start).toFixed(2)}`)
+            });
+        });
+
+
+
         const selectedPanel = ref('Alla')
         const selectedArticle = ref(null);
         const articles = ref([]);
