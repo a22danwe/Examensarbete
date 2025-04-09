@@ -133,6 +133,10 @@
             background-color: #aaa;
             cursor: not-allowed;
         }
+
+        .exportCSV {
+            text-align: center; margin-top: 1rem;
+        }
     </style>
 </head>
 
@@ -184,17 +188,11 @@
         <div class="sidebar right">
             <p></p>
         </div>
-
-        <div>
-            <button @click="exportCSV" style="display: block; margin: 1rem auto;">
-                Exportera som CSV
-            </button>
-        </div>
-        <!-- <div>
-            <button @click="startPagingTest" style="display: block; margin: 1rem auto;">
-                Kör 50 sidbyten
-            </button>
-        </div> -->
+    </div>
+    <div>
+        <button class="exportCSV" @click="exportCSV" style="display: block; margin: 1rem auto;">
+            Exportera CSV
+        </button>
     </div>
 
 
