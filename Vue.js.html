@@ -164,6 +164,8 @@
             <div class="card" v-for="item in paginatedArticles" :key="item.id" @click="selectedArticle = item">
                 <h3>{{ item.year }} – {{ item.ageGroup }} – {{ item.gender }}</h3>
                 <p><strong>Drug type:</strong> {{ item.panel }}</p>
+                <p><strong>Deaths:</strong> {{ item.estimate }} per 100 000 citizen</p>
+                <p>{{ item.description }}</p>
             </div>
 
             <div class="pagination">
