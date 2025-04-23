@@ -318,23 +318,28 @@
 
                 onMounted(async () => {
                     const start = performance.now();
-                    await fetchJson();
-                    await nextTick();
-                    const end = performance.now();
-                    const time = end - performance.timing.navigationStart;
+                    await fetchJson();        // hämta datan
+                    await nextTick();         // vänta tills Vue ritat ut DOM
 
-                    const label = `Reload ${getReloadCount()}`;
-                    console.log(`${label}: ${time.toFixed(2)} ms`);
-                    saveRenderTime(label, time);
+                    setTimeout(() => {
+                        requestAnimationFrame(() => {
+                            const end = performance.now();
+                            const time = end - start;
+                            const label = `Reload ${getReloadCount()}`;
+                            console.log(`${label}: ${time.toFixed(2)} ms`);
+                            saveRenderTime(label, time);
 
-                    if (getReloadCount() < 50) {
-                        incrementReloadCount();
-                        setTimeout(() => location.reload(), 500); // ladda om efter 0.5 sek
-                    } else {
-                        exportCSV(); // efter 50 reloads – exportera CSV
-                        clearReloadCount();
-                    }
+                            if (getReloadCount() < 50) {
+                                incrementReloadCount();
+                                setTimeout(() => location.reload(), 300);
+                            } else {
+                                exportCSV();
+                                clearReloadCount();
+                            }
+                        });
+                    }, 0);
                 });
+
 
                 async function autoTest(pages = 50) {
                     for (let i = 0; i < pages; i++) {
